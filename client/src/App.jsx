@@ -1,27 +1,31 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Login from './Login';
 import Register from './Register';
 import UserManagement from './UserManagement';
-function App() {
 
-  const token = localStorage.getItem('token');
+function App() {
+  const [token, setToken] = useState(localStorage.getItem('token'));
+
+  useEffect(() => {
+    const handleStorageChange = () => {
+      setToken(localStorage.getItem('token'));
+    };
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
 
   return (
-    <>
-      <Router>
+    <Router>
       <Routes>
-      <Route path="/login" element={<Login key={Date.now()} />} />
+        <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/users" element={token ? <UserManagement /> : <Navigate to="/login" />} />
-        <Route path="/" element={<Login key={Date.now()} />} />
+        <Route path="/" element={<Login />} />
+        <Route path="*" element={<Navigate to="/login" />} />
       </Routes>
     </Router>
-    </>
-  )
+  );
 }
 
-export default App
+export default App;
