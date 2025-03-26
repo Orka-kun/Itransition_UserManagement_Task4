@@ -25,6 +25,7 @@ const handleSubmit = async (e) => {
   try {
     const res = await axios.post(`${process.env.REACT_APP_API_URL}/login`, { email, password });
     localStorage.setItem('token', res.data.token);
+    localStorage.setItem('username', res.data.username);
     window.dispatchEvent(new Event('storage')); // Trigger storage event
     navigate('/users');
   } catch (err) {
