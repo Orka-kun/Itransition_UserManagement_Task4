@@ -20,14 +20,14 @@ const Login = () => {
     delete axios.defaults.headers.common['Authorization'];
   }, [location]); // Depend on location to reset state on route change
 
-  const handleSubmit = async (e) => {
+const handleSubmit = async (e) => {
   e.preventDefault();
   try {
     const res = await axios.post(`${process.env.REACT_APP_API_URL}/login`, { email, password });
     localStorage.setItem('token', res.data.token);
+    window.dispatchEvent(new Event('storage')); // Trigger storage event
     navigate('/users');
   } catch (err) {
-    console.error('Login error:', err.response?.data);
     setError(err.response?.data?.error || 'Login failed');
   }
 };
