@@ -69,30 +69,50 @@ app.post('/register', async (req, res) => {
   }
 });
 
-app.post('/login', (req, res) => {
+app.post('/login', async (req, res) => {
   const { email, password } = req.body;
-  if (!email || !password) return res.status(400).json({ error: 'All fields required' });
+  if (!email || !password) {
+    console.log('Missing fields:', { email, password });
+    return res.status(400).json({ error: 'All fields required' });
+  }
 
-  db.query('SELECT * FROM users WHERE email = ?', [email], async (err, results) => {
-    if (err) {
-      console.error('Login query error:', err);
-      return res.status(500).json({ error: 'Server error' });
-    }
-    if (results.length === 0) return res.status(400).json({ error: 'Invalid credentials' });
-
-    const user = results[0];
-    const isMatch = await require('bcryptjs').compare(password, user.password);
-    if (!isMatch) return res.status(400).json({ error: 'Invalid credentials' });
-
-    const token = require('jsonwebtoken').sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: '1h' });
-    db.query('UPDATE users SET last_login = NOW() WHERE id = ?', [user.id], (err) => {
+  try {
+    db.query('SELECT * FROM users WHERE email = ?', [email], async (err, results) => {
       if (err) {
-        console.error('Update last_login error:', err);
-        return res.status(500).json({ error: 'Server error' });
+        console.error('Login query error:', err);
+        return res.status(500).json({ error: 'Failed to login' });
       }
-      res.json({ token });
+      if (results.length === 0) {
+        console.log('User not found:', email);
+        return res.status(400).json({ error: 'Invalid credentials' });
+      }
+
+      const user = results[0];
+      const isMatch = await require('bcryptjs').compare(password, user.password);
+      if (!isMatch) {
+        console.log('Password mismatch for:', email);
+        return res.status(400).json({ error: 'Invalid credentials' });
+      }
+
+      try {
+        const token = require('jsonwebtoken').sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+        db.query('UPDATE users SET last_login = NOW() WHERE id = ?', [user.id], (err) => {
+          if (err) {
+            console.error('Update last_login error:', err);
+            return res.status(500).json({ error: 'Failed to update login time' });
+          }
+          console.log('User logged in:', email);
+          res.json({ token });
+        });
+      } catch (err) {
+        console.error('JWT signing error:', err);
+        res.status(500).json({ error: 'Failed to generate token' });
+      }
     });
-  });
+  } catch (err) {
+    console.error('Login error:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
 });
 
 app.get('/users', verifyUser, (req, res) => {
