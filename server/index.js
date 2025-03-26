@@ -119,7 +119,7 @@ app.post('/login', async (req, res) => {
     console.error('Login error:', err);
     res.status(500).json({ error: 'Server error' });
   }
-});
+}); 
 
 app.get('/users', verifyUser, (req, res) => {
   db.query('SELECT id, name, email, last_login, status FROM users ORDER BY last_login DESC', (err, results) => {
