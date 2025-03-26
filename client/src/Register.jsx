@@ -21,10 +21,16 @@ const Register = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     console.log('Register form submitted with:', { name, email, password });
+    if (!name || !email || !password) {
+      setError('Please fill in all fields');
+      return;
+    }
+
     try {
       const res = await axios.post(process.env.REACT_APP_API_URL + '/register', { name, email, password });
       console.log('Registration response:', res.data);
       if (res.status === 201) {
+        setMessage('User registered successfully');
         navigate('/login', { replace: true });
       }
     } catch (err) {
