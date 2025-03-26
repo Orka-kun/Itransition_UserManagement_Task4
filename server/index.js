@@ -50,16 +50,15 @@ app.post('/register', async (req, res) => {
     db.query(
       'INSERT INTO users (name, email, password) VALUES (?, ?, ?)',
       [name, email, hashedPassword],
-      (err) => {
+      (err, result) => {
         if (err) {
+          console.error('Registration error:', err);
           if (err.code === 'ER_DUP_ENTRY') {
-            console.log('Duplicate email:', email);
             return res.status(400).json({ error: 'Email already exists' });
           }
-          console.error('Registration error:', err);
           return res.status(500).json({ error: 'Failed to register user' });
         }
-        console.log('User registered:', email);
+        console.log('Registration successful. Inserted ID:', result.insertId);
         res.status(201).json({ message: 'User registered successfully' });
       }
     );
