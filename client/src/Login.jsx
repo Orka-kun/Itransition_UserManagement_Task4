@@ -21,17 +21,16 @@ const Login = () => {
   }, [location]); // Depend on location to reset state on route change
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      const res = await axios.post(`${process.env.REACT_APP_API_URL}/login`, { email, password });
-      localStorage.setItem('token', res.data.token);
-      localStorage.setItem('username', res.data.user.name); // Store the username
-      setMessage('Login successful');
-      navigate('/users');
-    } catch (err) {
-      setError(err.response?.data?.error || 'Server error');
-    }
-  };
+  e.preventDefault();
+  try {
+    const res = await axios.post(`${process.env.REACT_APP_API_URL}/login`, { email, password });
+    localStorage.setItem('token', res.data.token);
+    navigate('/users');
+  } catch (err) {
+    console.error('Login error:', err.response?.data);
+    setError(err.response?.data?.error || 'Login failed');
+  }
+};
 
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
