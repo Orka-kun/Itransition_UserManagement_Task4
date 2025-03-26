@@ -7,7 +7,7 @@ import UserManagement from './UserManagement';
 function App() {
   const [token, setToken] = useState(localStorage.getItem('token'));
 
-  useEffect(() => {
+useEffect(() => {
   const handleStorageChange = () => {
     setToken(localStorage.getItem('token'));
   };
@@ -15,6 +15,10 @@ function App() {
   return () => window.removeEventListener('storage', handleStorageChange);
 }, []);
 
+
+
+
+<Route path="/users" element={token ? <UserManagement /> : <Navigate to="/login" />} />
   return (
     <Router>
       <Routes>
