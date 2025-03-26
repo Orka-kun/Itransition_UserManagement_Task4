@@ -16,24 +16,24 @@ const UserManagement = () => {
   }, []);
 
   const fetchUsers = async () => {
-    try {
-      const res = await axios.get(process.env.REACT_APP_API_URL + '/users', {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-      });
-      if (Array.isArray(res.data)) {
-        setUsers(res.data);
-      } else {
-        setError(res.data.error || 'Server error');
-      }
-    } catch (err) {
-      if (err.response?.status === 403) {
-        localStorage.removeItem('token');
-        navigate('/login');
-      } else {
-        setError(err.response?.data?.error || 'Server error');
-      }
+  try {
+    const res = await axios.get(process.env.REACT_APP_API_URL + '/users', {
+      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+    });
+    if (Array.isArray(res.data)) {
+      setUsers(res.data);
+    } else {
+      setError(res.data.error || 'Server error');
     }
-  };
+  } catch (err) {
+    if (err.response?.status === 403) {
+      localStorage.removeItem('token');
+      navigate('/login');
+    } else {
+      setError(err.response?.data?.error || 'Server error');
+    }
+  }
+};
 
   const handleSelectAll = (e) => {
     if (e.target.checked) {
