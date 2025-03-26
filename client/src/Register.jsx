@@ -22,7 +22,7 @@ const Register = () => {
     e.preventDefault();
     console.log('Register form submitted with:', { name, email, password });
     try {
-      const res = await axios.post(`${process.env.REACT_APP_API_URL}/register`, { name, email, password });
+      const res = await axios.post(process.env.REACT_APP_API_URL + '/register', { name, email, password });
       console.log('Registration response:', res.data);
       if (res.status === 201) {
         navigate('/login', { replace: true });
