@@ -53,7 +53,7 @@ app.post('/register', async (req, res) => {
   }
 
   try {
-    const hashedPassword = await require('bcryptjs').hash(password, 10);
+    const hashedPassword = await bcrypt.hash(password, 10);
     db.query(
       'INSERT INTO users (name, email, password, status, created_at) VALUES (?, ?, ?, ?, NOW())',
       [name, email, hashedPassword, 'active'],
