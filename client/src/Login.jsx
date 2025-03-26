@@ -18,27 +18,19 @@ const Login = () => {
     setMessage('');
     delete axios.defaults.headers.common['Authorization'];
   }, [location]);
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    console.log('Form submitted with:', { email, password });
-    if (!email || !password) {
-      setError('Please fill in all fields');
-      return;
-    }
-
-    try {
-      const res = await axios.post(process.env.REACT_APP_API_URL + '/login', { email, password });
-      console.log('Login response:', res.data);
-      localStorage.setItem('token', res.data.token);
-      localStorage.setItem('username', res.data.username);
-      window.dispatchEvent(new Event('storage'));
-      navigate('/users', { replace: true });
-    } catch (err) {
-      console.error('Login error:', err.response?.data);
-      setError(err.response?.data?.error || 'Login failed');
-    }
-  };
+  
+const handleSubmit = async (e) => {
+  e.preventDefault();
+  try {
+    const res = await axios.post(process.env.REACT_APP_API_URL + '/login', { email, password });
+    localStorage.setItem('token', res.data.token);
+    localStorage.setItem('username', res.data.username);
+    window.dispatchEvent(new Event('storage')); // Trigger storage event
+    navigate('/users', { replace: true });
+  } catch (err) {
+    setError(err.response?.data?.error || 'Login failed');
+  }
+};
 
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
