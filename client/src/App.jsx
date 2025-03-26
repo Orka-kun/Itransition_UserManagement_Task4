@@ -7,13 +7,13 @@ import UserManagement from './UserManagement';
 function App() {
   const [token, setToken] = useState(localStorage.getItem('token'));
 
-useEffect(() => {
-  const handleStorageChange = () => {
-    setToken(localStorage.getItem('token'));
-  };
-  window.addEventListener('storage', handleStorageChange);
-  return () => window.removeEventListener('storage', handleStorageChange);
-}, []);
+  useEffect(() => {
+    const handleStorageChange = () => {
+      setToken(localStorage.getItem('token'));
+    };
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
 
   return (
     <Router>
