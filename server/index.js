@@ -101,10 +101,10 @@ app.post('/login', async (req, res) => {
             return res.status(500).json({ error: 'Failed to update login time' });
           }
           console.log('User logged in:', email);
-          res.json({ token });
+          res.json({ token, username: user.name });
         });
       } catch (err) {
-        console.error('JWT signing error:', err);
+        console.error('Jwt signing error:', err);
         res.status(500).json({ error: 'Failed to generate token' });
       }
     });
