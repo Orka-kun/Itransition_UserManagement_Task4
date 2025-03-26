@@ -11,15 +11,19 @@ const Register = () => {
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    try {
-      await axios.post(`${process.env.REACT_APP_API_URL}/register`, { name, email, password });
-      setMessage('Registration successful. Please log in.');
-      setTimeout(() => navigate('/login'), 2000);
-    } catch (err) {
-      setError(err.response?.data?.error || 'Server error');
+  e.preventDefault();
+  try {
+    const res = await axios.post(`${process.env.REACT_APP_API_URL}/register`, { name, email, password });
+    console.log('Registration response:', res.data);
+    if (res.status === 201) {
+      // Redirect to login or show success
+      navigate('/login');
     }
-  };
+  } catch (err) {
+    console.error('Registration error:', err.response?.data);
+    setError(err.response?.data?.error || 'Registration failed');
+  }
+};
   return (
     <div className="min-h-screen bg-gray-100 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
     <div className="sm:mx-auto sm:w-full sm:max-w-md">
