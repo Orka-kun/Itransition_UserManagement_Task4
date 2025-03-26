@@ -9,27 +9,27 @@ const UserManagement = () => {
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const navigate = useNavigate();
-  const username = localStorage.getItem('username') || 'User'; // Fallback to 'User' if username is not found
+  const username = localStorage.getItem('username') || 'User';
 
   useEffect(() => {
     fetchUsers();
   }, []);
 
   const fetchUsers = async () => {
-  try {
-    const res = await axios.get(`${process.env.REACT_APP_API_URL}/users`, {
-      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-    });
-    setUsers(res.data);
-  } catch (err) {
-    if (err.response?.status === 403) {
-      localStorage.removeItem('token');
-      navigate('/login');
-    } else {
-      setError(err.response?.data?.error || 'Server error');
+    try {
+      const res = await axios.get(process.env.REACT_APP_API_URL + '/users', {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+      });
+      setUsers(res.data);
+    } catch (err) {
+      if (err.response?.status === 403) {
+        localStorage.removeItem('token');
+        navigate('/login');
+      } else {
+        setError(err.response?.data?.error || 'Server error');
+      }
     }
-  }
-};
+  };
 
   const handleSelectAll = (e) => {
     if (e.target.checked) {
@@ -48,7 +48,7 @@ const UserManagement = () => {
   const handleBlock = async () => {
     try {
       const res = await axios.post(
-        'http://localhost:5000/block',
+        process.env.REACT_APP_API_URL + '/block',
         { userIds: selectedUsers },
         { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
       );
@@ -68,7 +68,7 @@ const UserManagement = () => {
   const handleUnblock = async () => {
     try {
       const res = await axios.post(
-        'http://localhost:5000/unblock',
+        process.env.REACT_APP_API_URL + '/unblock',
         { userIds: selectedUsers },
         { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
       );
@@ -83,7 +83,7 @@ const UserManagement = () => {
   const handleDelete = async () => {
     try {
       const res = await axios.post(
-        'http://localhost:5000/delete',
+        process.env.REACT_APP_API_URL + '/delete',
         { userIds: selectedUsers },
         { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
       );
@@ -102,7 +102,7 @@ const UserManagement = () => {
 
   const handleLogout = () => {
     localStorage.removeItem('token');
-    localStorage.removeItem('username'); // Clears the username on logout
+    localStorage.removeItem('username');
     navigate('/login');
   };
 
@@ -115,7 +115,8 @@ const UserManagement = () => {
             <button
               onClick={handleLogout}
               className="bg-red-600 text-white px-2 py-2 rounded-lg hover:bg-red-700 transition duration-200"
-            ><ArrowRightOnRectangleIcon className="h-5 w-5 inline mr-2" />
+            >
+              <ArrowRightOnRectangleIcon className="h-5 w-5 inline mr-2" />
               Logout
             </button>
           </div>
@@ -126,7 +127,7 @@ const UserManagement = () => {
             <button
               onClick={handleBlock}
               disabled={!selectedUsers.length}
-              className="bg-blue-600 text-white px-3 py-2 rounded-lg hover:bg-blue-700  transition duration-200"
+              className="bg-blue-600 text-white px-3 py-2 rounded-lg hover:bg-blue-700 transition duration-200"
               title="Block selected users"
             >
               <LockClosedIcon className="h-5 w-5 inline mr-2" />
@@ -135,7 +136,7 @@ const UserManagement = () => {
             <button
               onClick={handleUnblock}
               disabled={!selectedUsers.length}
-              className="bg-green-600 text-white px-3 py-2 rounded-lg hover:bg-green-700  transition duration-200"
+              className="bg-green-600 text-white px-3 py-2 rounded-lg hover:bg-green-700 transition duration-200"
               title="Unblock selected users"
             >
               <LockOpenIcon className="h-5 w-5 inline mr-2" />
@@ -144,65 +145,64 @@ const UserManagement = () => {
             <button
               onClick={handleDelete}
               disabled={!selectedUsers.length}
-              className="bg-red-600 text-white px-3 py-2 rounded-lg hover:bg-red-700  transition duration-200"
+              className="bg-red-600 text-white px-3 py-2 rounded-lg hover:bg-red-700 transition duration-200"
               title="Delete selected users"
             >
               <TrashIcon className="h-5 w-5 inline mr-2" />
               Delete
             </button>
           </div>
-          {/* <span className="text-gray-600">Search</span> */}
         </div>
         {message && <p className="text-green-500 mb-4">{message}</p>}
         {error && <p className="text-red-500 mb-4">{error}</p>}
         <table className="min-w-full divide-y divide-gray-200">
-  <thead>
-    <tr>
-      <th className="px-4 py-3 text-center">
-        <input
-          type="checkbox"
-          checked={selectedUsers.length === users.length && users.length > 0}
-          onChange={handleSelectAll}
-        />
-      </th>
-      <th className="px-4 py-3 text-left text-xs font-medium text-black uppercase tracking-wider">
-        Name
-      </th>
-      <th className="px-4 py-3 text-left text-xs font-medium text-black uppercase tracking-wider">
-        Email
-      </th>
-      <th className="px-4 py-3 text-left text-xs font-medium text-black uppercase tracking-wider">
-        Last Seen
-      </th>
-    </tr>
-  </thead>
-  <tbody className="bg-white divide-y divide-gray-200">
-    {users.map((user) => (
-      <tr className='text-black' key={user.id}>
-        <td className="px-4 py-4 text-center">
-          <input
-            type="checkbox"
-            checked={selectedUsers.includes(user.id)}
-            onChange={() => handleSelectUser(user.id)}
-            className="align-middle"
-          />
-        </td>
-        <td className="px-4 py-4 text-left text-sm font-medium">
-          {user.name}
-          <span className={`ml-2 text-xs ${
-            user.status === 'active' ? 'text-green-600' : 'text-red-600'
-          }`}>
-            ({user.status})
-          </span>
-        </td>
-        <td className="px-4 py-4 text-left text-sm ">{user.email}</td>
-        <td className="px-4 py-4 text-left text-sm ">
-          {user.last_login ? new Date(user.last_login).toLocaleString() : 'Never logged in'}
-        </td>
-      </tr>
-    ))}
-  </tbody>
-</table>
+          <thead>
+            <tr>
+              <th className="px-4 py-3 text-center">
+                <input
+                  type="checkbox"
+                  checked={selectedUsers.length === users.length && users.length > 0}
+                  onChange={handleSelectAll}
+                />
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-black uppercase tracking-wider">
+                Name
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-black uppercase tracking-wider">
+                Email
+              </th>
+              <th className="px-4 py-3 text-left text-xs font-medium text-black uppercase tracking-wider">
+                Last Seen
+              </th>
+            </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {users.map((user) => (
+              <tr key={user.id} className="text-black">
+                <td className="px-4 py-4 text-center">
+                  <input
+                    type="checkbox"
+                    checked={selectedUsers.includes(user.id)}
+                    onChange={() => handleSelectUser(user.id)}
+                    className="align-middle"
+                  />
+                </td>
+                <td className="px-4 py-4 text-left text-sm font-medium">
+                  {user.name}
+                  <span className={`ml-2 text-xs ${
+                    user.status === 'active' ? 'text-green-600' : 'text-red-600'
+                  }`}>
+                    ({user.status})
+                  </span>
+                </td>
+                <td className="px-4 py-4 text-left text-sm">{user.email}</td>
+                <td className="px-4 py-4 text-left text-sm">
+                  {user.last_login ? new Date(user.last_login).toLocaleString() : 'Never logged in'}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     </div>
   );
