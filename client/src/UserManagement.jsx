@@ -20,7 +20,11 @@ const UserManagement = () => {
       const res = await axios.get(process.env.REACT_APP_API_URL + '/users', {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
       });
-      setUsers(res.data);
+      if (Array.isArray(res.data)) {
+        setUsers(res.data);
+      } else {
+        setError(res.data.error || 'Server error');
+      }
     } catch (err) {
       if (err.response?.status === 403) {
         localStorage.removeItem('token');
@@ -177,7 +181,7 @@ const UserManagement = () => {
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {users.map((user) => (
+            {Array.isArray(users) ? users.map((user) => (
               <tr key={user.id} className="text-black">
                 <td className="px-4 py-4 text-center">
                   <input
@@ -200,12 +204,8 @@ const UserManagement = () => {
                   {user.last_login ? new Date(user.last_login).toLocaleString() : 'Never logged in'}
                 </td>
               </tr>
-            ))}
+            )) : <tr><td colSpan="4">No users found or error occurred.</td></tr>}
           </tbody>
         </table>
       </div>
-    </div>
-  );
-};
-
-export default UserManagement;
+   
