@@ -7,7 +7,10 @@ const dotenv = require('dotenv');
 
 dotenv.config();
 const app = express();
-app.use(cors());
+app.use(cors({
+  origin: 'https://itransition-usermanagement-task4-1.onrender.com',
+  credentials: true
+}));
 app.use(express.json());
 
 const db = mysql.createConnection({
@@ -15,10 +18,14 @@ const db = mysql.createConnection({
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
+  connectTimeout: 10000 // Increase timeout for external DB
 });
 
 db.connect((err) => {
-  if (err) throw err;
+  if (err) {
+    console.error('Database connection error:', err);
+    throw err;
+  }
   console.log('MySQL Connected');
 });
 
@@ -46,10 +53,10 @@ app.post('/register', async (req, res) => {
   }
 
   try {
-    const hashedPassword = await require('bcryptjs').hash(password, 10);
+    const hashedPassword = await bcrypt.hash(password, 10);
     db.query(
-      'INSERT INTO users (name, email, password) VALUES (?, ?, ?)',
-      [name, email, hashedPassword],
+      'INSERT INTO users (name, email, password, status, created_at) VALUES (?, ?, ?, ?, NOW())',
+      [name, email, hashedPassword, 'active'],
       (err, result) => {
         if (err) {
           console.error('Registration error:', err);
@@ -87,14 +94,14 @@ app.post('/login', async (req, res) => {
       }
 
       const user = results[0];
-      const isMatch = await require('bcryptjs').compare(password, user.password);
+      const isMatch = await bcrypt.compare(password, user.password);
       if (!isMatch) {
         console.log('Password mismatch for:', email);
         return res.status(400).json({ error: 'Invalid credentials' });
       }
 
       try {
-        const token = require('jsonwebtoken').sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: '1h' });
+        const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: '1h' });
         db.query('UPDATE users SET last_login = NOW() WHERE id = ?', [user.id], (err) => {
           if (err) {
             console.error('Update last_login error:', err);
@@ -116,7 +123,10 @@ app.post('/login', async (req, res) => {
 
 app.get('/users', verifyUser, (req, res) => {
   db.query('SELECT id, name, email, last_login, status FROM users ORDER BY last_login DESC', (err, results) => {
-    if (err) return res.status(500).json({ error: 'Server error' });
+    if (err) {
+      console.error('Fetch users error:', err);
+      return res.status(500).json({ error: 'Failed to fetch users' });
+    }
     res.json(results);
   });
 });
@@ -124,7 +134,10 @@ app.get('/users', verifyUser, (req, res) => {
 app.post('/block', verifyUser, (req, res) => {
   const { userIds } = req.body;
   db.query('UPDATE users SET status = "blocked" WHERE id IN (?)', [userIds], (err) => {
-    if (err) return res.status(500).json({ error: 'Server error' });
+    if (err) {
+      console.error('Block users error:', err);
+      return res.status(500).json({ error: 'Failed to block users' });
+    }
     if (userIds.includes(req.user.id)) {
       return res.status(403).json({ error: 'User blocked or deleted' });
     }
@@ -135,7 +148,10 @@ app.post('/block', verifyUser, (req, res) => {
 app.post('/unblock', verifyUser, (req, res) => {
   const { userIds } = req.body;
   db.query('UPDATE users SET status = "active" WHERE id IN (?)', [userIds], (err) => {
-    if (err) return res.status(500).json({ error: 'Server error' });
+    if (err) {
+      console.error('Unblock users error:', err);
+      return res.status(500).json({ error: 'Failed to unblock users' });
+    }
     res.json({ message: 'User unblocked successfully!' });
   });
 });
@@ -143,7 +159,10 @@ app.post('/unblock', verifyUser, (req, res) => {
 app.post('/delete', verifyUser, (req, res) => {
   const { userIds } = req.body;
   db.query('DELETE FROM users WHERE id IN (?)', [userIds], (err) => {
-    if (err) return res.status(500).json({ error: 'Server error' });
+    if (err) {
+      console.error('Delete users error:', err);
+      return res.status(500).json({ error: 'Failed to delete users' });
+    }
     if (userIds.includes(req.user.id)) {
       return res.status(403).json({ error: 'User blocked or deleted' });
     }
@@ -151,9 +170,9 @@ app.post('/delete', verifyUser, (req, res) => {
   });
 });
 
-// Add a root route for testing
-const port = 5000
 app.get('/', (req, res) => {
   res.send('Welcome to the User Management API');
 });
+
+const port = 5000;
 app.listen(port, () => console.log(`Server running on http://localhost:${port}`));
