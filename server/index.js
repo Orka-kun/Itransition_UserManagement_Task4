@@ -40,23 +40,33 @@ const verifyUser = (req, res, next) => {
 
 app.post('/register', async (req, res) => {
   const { name, email, password } = req.body;
-  if (!name || !email || !password) return res.status(400).json({ error: 'All fields required' });
+  if (!name || !email || !password) {
+    console.log('Missing fields:', { name, email, password });
+    return res.status(400).json({ error: 'All fields required' });
+  }
 
-  const hashedPassword = await require('bcryptjs').hash(password, 10);
-  db.query(
-    'INSERT INTO users (name, email, password) VALUES (?, ?, ?)',
-    [name, email, hashedPassword],
-    (err) => {
-      if (err) {
-        if (err.code === 'ER_DUP_ENTRY') {
-          return res.status(400).json({ error: 'Email already exists' });
+  try {
+    const hashedPassword = await require('bcryptjs').hash(password, 10);
+    db.query(
+      'INSERT INTO users (name, email, password) VALUES (?, ?, ?)',
+      [name, email, hashedPassword],
+      (err) => {
+        if (err) {
+          if (err.code === 'ER_DUP_ENTRY') {
+            console.log('Duplicate email:', email);
+            return res.status(400).json({ error: 'Email already exists' });
+          }
+          console.error('Registration error:', err);
+          return res.status(500).json({ error: 'Failed to register user' });
         }
-        console.error('Registration error:', err);
-        return res.status(500).json({ error: 'Server error' });
+        console.log('User registered:', email);
+        res.status(201).json({ message: 'User registered successfully' });
       }
-      res.status(201).json({ message: 'User registered successfully' });
-    }
-  );
+    );
+  } catch (err) {
+    console.error('Hashing error:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
 });
 
 app.post('/login', (req, res) => {
